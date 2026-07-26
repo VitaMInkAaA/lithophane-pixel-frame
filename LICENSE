@@ -1,0 +1,81 @@
+Lithophane Pixel Frame
+Copyright (c) 2026 [Yurii Vorotnyy]
+
+SPDX-License-Identifier: CC-BY-NC-4.0
+
+This work is licensed under the
+Creative Commons Attribution-NonCommercial 4.0 International License
+(CC BY-NC 4.0).
+
+Full legal text (authoritative):
+https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+Human-readable summary:
+https://creativecommons.org/licenses/by-nc/4.0/
+
+================================================================================
+PLAIN-LANGUAGE SUMMARY — NOT A SUBSTITUTE FOR THE LEGAL TEXT ABOVE
+================================================================================
+
+You are free to:
+
+- Share — copy and redistribute the material in any medium or format
+- Adapt — remix, transform, and build upon the material
+
+Under the following terms:
+
+- Attribution — You must give appropriate credit, provide a link to this
+  license, and indicate if changes were made. You may do so
+  in any reasonable manner, but not in any way that suggests
+  the licensor endorses you or your use.
+
+- NonCommercial — You may NOT use the material for commercial purposes.
+  "Commercial purposes" means primarily intended for or
+  directed towards commercial advantage or monetary
+  compensation. Selling assembled lamps, selling the printed
+  lithophane frame, or bundling this work into a paid product
+  or service all count as commercial use.
+
+- No additional restrictions — You may not apply legal terms or technological
+  measures that legally restrict others from doing anything
+  the license permits.
+
+Explicitly allowed without asking:
+
+- Building one for yourself, your family or as a gift
+- Modifying the firmware and publishing your version, with credit
+- Using it in education, workshops, hackerspaces and non-profit events
+- Writing about it, filming it, publishing photos of it
+
+================================================================================
+COMMERCIAL LICENCE
+================================================================================
+
+Commercial use requires separate written permission from the copyright holder.
+If you want to sell finished lamps, kits, printed panels, or include this work
+in a commercial product — get in touch and we will sort it out.
+
+================================================================================
+SCOPE
+================================================================================
+
+This license covers the contents of this repository: the MicroPython firmware,
+the web panel, the documentation, and the described hardware design.
+
+It does NOT cover third-party components used alongside it, which keep their own
+licenses — MicroPython itself, the Raspberry Pi Pico W hardware and its SDK, and
+any external tool referenced in the documentation.
+
+NOTE: CC BY-NC 4.0 is NOT an OSI-approved open-source license, because it
+restricts commercial use. That is intentional here. If you need an open-source
+license instead, the copyright holder must relicense.
+
+================================================================================
+NO WARRANTY
+================================================================================
+
+This work is provided "as is", without warranty of any kind, express or implied.
+The copyright holder is not liable for any damage, injury or loss arising from
+building, using or modifying it. You are working with mains-powered supplies and
+several amps of current — the electrical safety of your build is your
+responsibility.

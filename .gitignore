@@ -1,0 +1,13 @@
+# Pliki tworzone na Pico w trakcie pracy - nie naleza do repozytorium
+settings.json
+frames.json
+log.txt
+anims/
+
+# Python
+__pycache__/
+*.pyc
+
+# System
+.DS_Store
+Thumbs.db

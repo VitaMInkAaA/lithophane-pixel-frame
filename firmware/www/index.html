@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12141a">
+<title>LED Lampka</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="dot" id="dot"></span>
+    <div>
+      <h1>LED Lampka</h1>
+      <small id="netinfo">łączę…</small>
+    </div>
+  </div>
+  <button id="power" class="power" title="Włącz / wyłącz" aria-label="Włącz / wyłącz">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"
+         fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <path d="M12 4.5v7.2"/>
+      <path d="M7.2 7.4a7 7 0 1 0 9.6 0"/>
+    </svg>
+  </button>
+</header>
+
+<nav class="tabs">
+  <button class="tab on" data-tab="anim">Tryby</button>
+  <button class="tab" data-tab="edit">Edytor</button>
+  <button class="tab" data-tab="gal">Galeria</button>
+  <button class="tab" data-tab="set">Ustawienia</button>
+  <button class="tab" data-tab="wifi">WiFi</button>
+</nav>
+
+<!-- ============================================================ ANIMACJE -->
+<section id="tab-anim" class="panel on">
+  <div class="card">
+    <label class="row">
+      <span>Jasność</span>
+      <output id="brOut">–</output>
+    </label>
+    <input type="range" id="br" min="1" max="100" step="1">
+    <p class="hint" id="brHint"></p>
+  </div>
+
+  <div class="card">
+    <label class="row">
+      <span>Szybkość</span>
+      <output id="spOut">–</output>
+    </label>
+    <input type="range" id="sp" min="10" max="300" step="5">
+  </div>
+
+  <div class="card" id="colCard">
+    <div class="row">
+      <span>Kolor</span>
+      <input type="color" id="col">
+    </div>
+    <div class="swatches" id="swatches"></div>
+    <p class="hint" id="colHint">Używany przez tryby „Kolor stały" i „Oddech".</p>
+  </div>
+
+  <h2>Tryby</h2>
+  <div class="grid-anims" id="anims"></div>
+</section>
+
+<!-- ============================================================== EDYTOR -->
+<section id="tab-edit" class="panel">
+  <div class="card">
+    <p class="hint">Maluj palcem po siatce. Układ 1:1 z ramką — lewy górny róg siatki
+       to lewy górny róg lampki.</p>
+    <div class="editor">
+      <div class="pixgrid" id="pixgrid"></div>
+    </div>
+    <div class="navrow">
+      <button id="fPrev" title="poprzednia klatka">◀</button>
+      <span id="fPos">1 / 1</span>
+      <button id="fNext" title="następna klatka">▶</button>
+    </div>
+    <div class="btnrow">
+      <button id="playTop" class="mini">▶ Podgląd</button>
+      <button id="fAdd" class="mini">+ klatka</button>
+      <button id="fDup" class="mini">duplikuj</button>
+      <button id="undo" class="mini">↶ Cofnij</button>
+      <button id="redo" class="mini">↷ Ponów</button>
+    </div>
+    <div class="btnrow quick">
+      <span class="lab">przesuń rysunek</span>
+      <button data-mv="left" title="w lewo">←</button>
+      <button data-mv="up" title="w górę">↑</button>
+      <button data-mv="down" title="w dół">↓</button>
+      <button data-mv="right" title="w prawo">→</button>
+    </div>
+    <label class="check onion"><input type="checkbox" id="onion">
+      <span>Duch poprzedniej klatki</span></label>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <span>Pędzel</span>
+      <input type="color" id="brush" value="#ff0000">
+    </div>
+    <div class="swatches" id="brushSw"></div>
+    <div class="tools" id="tools">
+      <button class="tool on" data-tool="brush">Pędzel</button>
+      <button class="tool" data-tool="fill">Wypełnianie</button>
+      <button class="tool" data-tool="pick">Pipeta</button>
+    </div>
+    <div class="btnrow">
+      <button id="tErase" class="mini">Gumka</button>
+      <button id="tAll" class="mini">Zamaluj wszystko</button>
+      <button id="tClear" class="mini">Wyczyść</button>
+      <button id="tCopy" class="mini">Kopiuj z poprzedniej</button>
+    </div>
+    <label class="check">
+      <input type="checkbox" id="tog" checked>
+      <span>Klik tym samym kolorem gasi piksel</span>
+    </label>
+    <label class="check">
+      <input type="checkbox" id="live" checked>
+      <span>Podgląd na żywo na lampce</span>
+    </label>
+  </div>
+
+  <details class="card">
+    <summary>Efekty i przekształcenia</summary>
+    <div class="row">
+      <span>Działaj na</span>
+      <select id="scope">
+        <option value="one">tę klatkę</option>
+        <option value="rest">od tej do końca</option>
+        <option value="all">wszystkie klatki</option>
+      </select>
+    </div>
+
+    <label class="row"><span>Jasność</span><output id="fxOut">100%</output></label>
+    <input type="range" id="fxBr" min="0" max="200" step="5" value="100">
+    <div class="btnrow">
+      <button id="fxApply" class="primary">Zastosuj</button>
+      <button id="fxDark" class="mini">−20%</button>
+      <button id="fxLight" class="mini">+20%</button>
+    </div>
+    <p class="hint">100% nic nie zmienia. Efekt zapieka się w piksele, więc po
+       zejściu do 0% koloru nie da się odzyskać inaczej niż przyciskiem Cofnij.</p>
+
+    <div class="btnrow">
+      <button data-fx="invert" class="mini">Negatyw</button>
+      <button data-fx="gray" class="mini">Odbarw</button>
+      <button data-fx="sat" class="mini">Nasyć</button>
+      <button data-fx="tint" class="mini">Zabarw pędzlem</button>
+      <button data-fx="contrast" class="mini">Kontrast</button>
+    </div>
+
+    <div class="btnrow move">
+      <button data-mv="up" title="w górę">↑</button>
+      <button data-mv="down" title="w dół">↓</button>
+      <button data-mv="left" title="w lewo">←</button>
+      <button data-mv="right" title="w prawo">→</button>
+      <button data-mv="mirh" class="mini">odbij ↔</button>
+      <button data-mv="mirv" class="mini">odbij ↕</button>
+      <button data-mv="rot" class="mini">obróć 180°</button>
+    </div>
+    <p class="hint">Przesuwanie zawija obraz — to, co wyjedzie bokiem, wraca
+       z drugiej strony.</p>
+  </details>
+
+  <details class="card">
+    <summary>Generowanie klatek</summary>
+    <div class="row">
+      <span>Ile klatek dodać</span>
+      <input type="number" id="genN" class="num" min="1" max="20" step="1" value="6">
+    </div>
+    <div class="btnrow">
+      <button data-gen="fadeout" class="mini">Ściemnianie</button>
+      <button data-gen="fadein" class="mini">Rozjaśnianie</button>
+      <button data-gen="cross" class="mini">Przenikanie do następnej</button>
+    </div>
+    <div class="btnrow">
+      <button data-gen="blink" class="mini">Miganie</button>
+      <button data-gen="move" class="mini">Przesuwanie</button>
+    </div>
+    <div class="row">
+      <span>Kierunek przesuwania</span>
+      <select id="genDir">
+        <option value="up">w górę</option>
+        <option value="down">w dół</option>
+        <option value="left">w lewo</option>
+        <option value="right">w prawo</option>
+      </select>
+    </div>
+    <div class="btnrow">
+      <button data-gen="pingpong" class="mini">Tam i z powrotem</button>
+      <button data-gen="reverse" class="mini">Odwróć kolejność</button>
+      <button data-gen="faster" class="mini">Szybciej ×2</button>
+      <button data-gen="slower" class="mini">Wolniej ×2</button>
+    </div>
+    <p class="hint" id="genHint"></p>
+  </details>
+
+  <div class="card">
+    <h2>Klatki</h2>
+    <div class="strip" id="strip"></div>
+    <div class="btnrow">
+      <button id="fLeft" class="mini">← przesuń</button>
+      <button id="fRight" class="mini">przesuń →</button>
+      <button id="fDel" class="mini danger">usuń klatkę</button>
+    </div>
+    <div class="row">
+      <span>Czas tej klatki</span>
+      <span><input type="number" id="fMs" class="num" min="40" max="10000" step="20"> ms</span>
+    </div>
+    <div class="btnrow">
+      <button id="fMsAll" class="mini">ten czas wszystkim</button>
+      <button id="play" class="mini">▶ Podgląd</button>
+      <button id="fWipe" class="mini danger">usuń wszystkie</button>
+    </div>
+    <label class="check">
+      <input type="checkbox" id="playLamp" checked>
+      <span>Podgląd puszczaj też na lampce</span>
+    </label>
+    <p class="hint" id="animInfo"></p>
+    <p class="hint">Po wyłączeniu tej opcji podgląd zostaje tylko na siatce
+       w telefonie, a lampka gra dalej swoje. Stop zawsze wraca do klatki, którą
+       edytowałeś — a jeśli lampka brała udział, to i ona wraca do poprzedniego
+       stanu.</p>
+  </div>
+
+  <div class="card">
+    <button id="send" class="primary">Wyślij na lampkę (zapętlone)</button>
+    <div class="btnrow">
+      <input type="text" id="fname" maxlength="24" placeholder="nazwa animacji">
+      <button id="save" class="primary">Zapisz</button>
+    </div>
+    <p class="hint">Zapisane lądują w <b>Galerii</b>, wchodzą na listę trybów i mogą
+       brać udział w przełączaniu przyciskiem.</p>
+  </div>
+</section>
+
+<!-- ============================================================= GALERIA -->
+<section id="tab-gal" class="panel">
+  <div class="card">
+    <h2>Moje animacje</h2>
+    <div id="galList" class="framelist"></div>
+  </div>
+
+  <div class="card">
+    <h2>Sekwencja przycisku</h2>
+    <p class="hint">Zaznaczone tryby przełączają się <b>2 kliknięciami</b> przycisku.
+       Odznaczone zostają dostępne z panelu, ale przycisk je pomija — dzięki temu
+       na ramce krąży tylko to, co faktycznie chcesz oglądać.</p>
+    <div id="seqList" class="framelist"></div>
+  </div>
+</section>
+
+<!-- ========================================================== USTAWIENIA -->
+<section id="tab-set" class="panel">
+  <div class="card">
+    <label class="check">
+      <input type="checkbox" id="ao">
+      <span>Automatyczne wyłączanie</span>
+    </label>
+    <div class="row">
+      <span>Po ilu minutach bezczynności</span>
+      <input type="number" id="aoMin" min="1" max="720" step="1" class="num">
+    </div>
+    <p class="hint" id="aoLeft"></p>
+    <p class="hint">Licznik zeruje każde dotknięcie przycisku i każda zmiana w panelu.</p>
+    <button id="aoSave" class="primary">Zapisz</button>
+  </div>
+
+  <div class="card">
+    <h2>Geometria matrycy</h2>
+    <p class="hint">Jeśli animacje idą w złą stronę albo „szatkują się", uruchom
+       <b>Kreator</b> — zada dwa pytania o to, co widzisz na ramce, i sam ustawi
+       resztę. <b>Wzór</b> to sprawdzenie: poprawnie wygląda jako biały piksel
+       w lewym górnym rogu, czerwona linia stamtąd w prawo i zielona w dół.</p>
+    <div id="wizard"></div>
+    <div class="row">
+      <span>Pierwsza dioda</span>
+      <select id="origin">
+        <option value="BR">prawy dolny róg</option>
+        <option value="BL">lewy dolny róg</option>
+        <option value="TR">prawy górny róg</option>
+        <option value="TL">lewy górny róg</option>
+      </select>
+    </div>
+    <div class="row">
+      <span>Pasek biegnie</span>
+      <select id="rows">
+        <option value="1">rzędami (poziomo)</option>
+        <option value="0">kolumnami (pionowo)</option>
+      </select>
+    </div>
+    <label class="check">
+      <input type="checkbox" id="snake">
+      <span>Wężykiem (zigzag)</span>
+    </label>
+    <div class="btnrow">
+      <button id="wizStart" class="primary">Kreator</button>
+      <button id="geoSave" class="mini">Zapisz ręcznie</button>
+      <button id="calib" class="mini">Wzór</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Dostęp bez znania adresu IP</h2>
+    <div class="row">
+      <span>Nazwa lampki</span>
+      <input type="text" id="host" maxlength="24" class="num" style="width:130px">
+    </div>
+    <p class="hint">Panel będzie pod <b id="hostUrl">http://lampka.local/</b> —
+       działa bez zaglądania do rutera. Same małe litery, cyfry i myślnik.</p>
+    <label class="check">
+      <input type="checkbox" id="apAlways">
+      <span>Trzymaj własną sieć lampki cały czas</span>
+    </label>
+    <p class="hint">Zapasowe wejście na wypadek, gdy nazwa .local nie działa albo
+       domowe WiFi padnie: podłączasz telefon do sieci <b id="apName">LED-Lampka</b>
+       i wchodzisz na <b>192.168.4.1</b>.<br>
+       <b>Uwaga:</b> Pico ma jedno radio na obie sieci. Trzymanie własnego AP obok
+       domowego WiFi potrafi rozchwiać połączenie z routerem i lampka przestaje
+       odpowiadać mimo poprawnego adresu. Włączaj tylko tam, gdzie naprawdę nie
+       masz dostępu do rutera.</p>
+    <label class="check">
+      <input type="checkbox" id="captive">
+      <span>Otwieraj panel sam po podłączeniu do sieci lampki</span>
+    </label>
+    <p class="hint">Telefon po połączeniu z siecią lampki sprawdza dostęp do
+       internetu — lampka odpowiada wtedy swoim panelem, więc system otwiera go
+       od razu, bez wpisywania adresu.</p>
+    <button id="netSave" class="primary">Zapisz (wymaga restartu)</button>
+  </div>
+
+  <div class="card">
+    <h2>Przycisk i start</h2>
+    <div class="row">
+      <span>TTP223 przy dotyku daje</span>
+      <select id="btnLogic">
+        <option value="1">stan wysoki (fabrycznie)</option>
+        <option value="0">stan niski</option>
+      </select>
+    </div>
+    <label class="check">
+      <input type="checkbox" id="showIp">
+      <span>Po starcie pokaż końcówkę IP na matrycy</span>
+    </label>
+    <p class="hint">Zmiana logiki przycisku wymaga restartu.</p>
+    <div class="btnrow">
+      <button id="btnSave" class="primary">Zapisz</button>
+      <button id="reboot" class="mini danger">Restart lampki</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Diagnostyka</h2>
+    <label class="check">
+      <input type="checkbox" id="logFile">
+      <span>Zapisuj zdarzenia do pliku <code>log.txt</code></span>
+    </label>
+    <p class="hint">Log przetrwa zawieszenie i restart, więc jest jedynym sposobem
+       dowiedzenia się, co stało się w nocy. Zapisywane są tylko istotne zdarzenia
+       (sieć, pamięć, błędy) — pojedyncze wejścia na panel idą wyłącznie na port
+       szeregowy, żeby nie zajeżdżać pamięci flash. Plik nie rośnie ponad ~12 kB.</p>
+    <label class="check">
+      <input type="checkbox" id="wifiPm">
+      <span>Oszczędzanie energii radia WiFi</span>
+    </label>
+    <p class="hint">Trzymaj <b>wyłączone</b>. Włączone usypia odbiornik i lampka po
+       kilku godzinach przestaje odpowiadać, choć formalnie jest w sieci.
+       Koszt wyłączenia to ~30 mA — przy matrycy pobierającej ampery nic.</p>
+    <div class="btnrow">
+      <button id="logSave" class="primary">Zapisz</button>
+      <button id="logShow" class="mini">Pokaż log</button>
+      <button id="logClear" class="mini danger">Wyczyść log</button>
+    </div>
+    <pre id="logBox" class="log"></pre>
+  </div>
+
+  <div class="card">
+    <h2>Sterowanie dotykiem</h2>
+    <ul class="keys">
+      <li><b>1 klik</b> — włącz / wyłącz</li>
+      <li><b>2 kliki</b> — następny tryb</li>
+      <li><b>3 kliki</b> — poprzedni tryb</li>
+      <li><b>4 kliki</b> — pokaż końcówkę IP na matrycy</li>
+      <li><b>przytrzymanie</b> — jasność; puszczasz i trzymasz znowu, żeby
+          zmienić kierunek</li>
+      <li><b>2 kliki + przytrzymanie</b> — szybkość animacji, tak samo</li>
+      <li><b>3 kliki + przytrzymanie 5 s</b> — zapomnij WiFi, powrót do trybu AP</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================================================================ WIFI -->
+<section id="tab-wifi" class="panel">
+  <div class="card">
+    <h2>Stan</h2>
+    <p class="hint" id="wifiState">–</p>
+    <p class="err" id="wifiErr"></p>
+    <div id="addrList" class="framelist"></div>
+  </div>
+
+  <div class="card">
+    <div class="btnrow">
+      <button id="scan" class="mini">Skanuj sieci</button>
+    </div>
+    <div id="netlist" class="framelist"></div>
+    <div class="row"><span>Sieć</span></div>
+    <input type="text" id="ssid" placeholder="nazwa sieci">
+    <div class="row"><span>Hasło</span></div>
+    <input type="password" id="pass" placeholder="hasło WiFi">
+    <button id="wifiSave" class="primary">Zapisz i połącz</button>
+    <p class="hint">Lampka spróbuje od razu, bez restartu — wynik zobaczysz wyżej
+       w polu „Stan". Jeśli się nie uda, nie traci własnej sieci, więc panel
+       zostaje dostępny i możesz poprawić hasło.</p>
+    <div class="row">
+      <span>Kraj (kanały WiFi)</span>
+      <input type="text" id="country" maxlength="2" class="num" style="width:70px">
+    </div>
+    <p class="hint">Bez tego Pico trzyma się kanałów 1–11. Routery w Polsce
+       potrafią stać na 12 lub 13 — takiej sieci lampka <b>w ogóle nie zobaczy</b>.</p>
+    <button id="forget" class="mini danger">Zapomnij sieć (wróć do AP)</button>
+  </div>
+</section>
+
+<div id="toast" class="toast"></div>
+<script src="/app.js"></script>
+</body>
+</html>
