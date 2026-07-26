@@ -138,6 +138,7 @@ function apply(st) {
   }
   if (document.activeElement !== $('#country')) $('#country').value = st.country || '';
   renderAddrs(st);
+  rssiBanner(st);
   if (sta && !$('#ssid').value) $('#ssid').value = st.net.ssid;
 }
 
@@ -942,6 +943,33 @@ function renderSeq(st) {
       + (a.own ? ' <span class="tagi">· własna</span>' : '');
     row.append(cb, nm);
     box.appendChild(row);
+  });
+}
+
+/** Ostrzeżenie o słabym zasięgu — tylko w zakładkach WiFi i Ustawienia.
+ *  Przy słabym sygnale panel potrafi zamrzeć w połowie pracy, więc lepiej
+ *  wiedzieć o tym zanim się to stanie. */
+function rssiBanner(st) {
+  const boxes = [$('#rssiWifi'), $('#rssiSet')];
+  const r = st.net.rssi;
+  const lim = st.rssi_min == null ? -78 : st.rssi_min;
+  let html = '', bad = false;
+
+  if (st.net.mode.indexOf('sta') === 0 && r != null) {
+    if (r < lim) {
+      bad = true;
+      html = '<b>Za słaby zasięg: ' + r + ' dBm.</b> Lampka ma adres, ale pakiety '
+           + 'giną — panel potrafi zamrzeć albo się nie wczytać. Przysuń ją bliżej '
+           + 'routera lub dostaw wzmacniacz. Jeśli w zasięgu jest mocniejszy '
+           + 'nadajnik tej samej sieci, lampka przepnie się sama.';
+    } else if (r < -70) {
+      html = '<b>Zasięg na granicy: ' + r + ' dBm.</b> Na razie działa, ale przy '
+           + 'słabszych warunkach panel może się zacinać.';
+    }
+  }
+  boxes.forEach((b) => {
+    b.innerHTML = html;
+    b.classList.toggle('zly', bad);
   });
 }
 

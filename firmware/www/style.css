@@ -449,6 +449,21 @@ details.card[open] > summary::after { content: '▴'; }
 .err:empty { display: none; }
 .err.wait { color: var(--acc2); border-color: #4a3a1f; background: rgba(255,176,102,.09); }
 
+/* ------------------------------------------------------------- baner */
+.banner {
+  margin: 0 0 13px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  border: 1px solid #4a3a1f;
+  background: rgba(255,176,102,.10);
+  color: var(--acc2);
+}
+.banner:empty { display: none; }
+.banner.zly { border-color: #4a2b2b; background: rgba(255,92,92,.10); color: var(--bad); }
+.banner b { color: var(--txt); }
+
 /* --------------------------------------------------------------- log */
 .log {
   margin: 12px 0 0;

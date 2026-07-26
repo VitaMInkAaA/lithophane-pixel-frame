@@ -280,7 +280,9 @@ modes the touch button cycles through.
 **Settings** — auto-off timer, hostname, access-point behaviour, matrix geometry
 wizard, button logic, diagnostics.
 
-**WiFi** — status, every address the lamp answers on, network scan, country code.
+**WiFi** — status with signal strength, every address the lamp answers on, network
+scan, country code. A weak link raises a warning banner here and in Settings, since
+that is where you would go to do something about it.
 
 ### Why the effects don't slow the lamp down
 

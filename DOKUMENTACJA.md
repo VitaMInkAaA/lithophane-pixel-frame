@@ -282,8 +282,13 @@ otwieranie panelu, geometria matrycy z kreatorem, logika przycisku, restart.
 Kafelek koloru **wyszarza się i blokuje** w trybach, które mają własne kolory —
 działa tylko przy „Kolor stały" i „Oddech", żeby nie kręcić suwakiem bez efektu.
 
-**WiFi** — stan, wszystkie adresy pod którymi lampka odpowiada (klikalne), skan sieci,
-zapis, „zapomnij sieć".
+**WiFi** — stan wraz z siłą sygnału, wszystkie adresy pod którymi lampka odpowiada
+(klikalne), skan sieci, zapis, „zapomnij sieć".
+
+Przy słabym sygnale na górze zakładek **WiFi** i **Ustawienia** pojawia się baner
+z konkretną wartością w dBm. Tylko tam — w Trybach, Edytorze i Galerii nie ma czego
+z tym zrobić, więc nie zabiera miejsca. Poniżej −70 dBm ostrzeżenie jest łagodne,
+poniżej progu `rssi_min` robi się czerwone i tłumaczy, że pakiety giną.
 
 Ustawienia lądują w `settings.json`, ale zapis na flash jest zbierany i wykonywany
 najwyżej raz na 5 s — klikanie przyciskiem nie zajeżdża pamięci.
