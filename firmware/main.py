@@ -116,8 +116,8 @@ async def housekeeping(server):
             free = gc.mem_free()
         except AttributeError:
             free = -1
-        logger.log("RAM %d B | polaczenia otwarte %d | obsluzonych %d"
-                   % (free, server.open_conns, server.served))
+        logger.log("RAM %d B | polaczenia otwarte %d | obsluzonych %d | %s"
+                   % (free, server.open_conns, server.served, netmgr.link_info()))
         await asyncio.sleep(300)
 
 

@@ -84,6 +84,7 @@ class Server:
         self.srv = None
         self.open_conns = 0     # ile polaczen obslugujemy w tej chwili
         self.served = 0         # ile zapytan od startu
+        self.probe_host = None  # adres, na ktorym sonda dziala na tym firmware
 
     def _is_ours(self, host):
         """Czy klient puka pod adres lampki, czy pod cudzy (probka lacznosci)?
@@ -121,12 +122,10 @@ class Server:
         await asyncio.sleep(1)
         await self.start(self.port)
 
-    async def _probe(self):
-        """Puka do wlasnego portu. True = nasluch przyjmuje polaczenia."""
+    async def _knock(self, host):
         w = None
         try:
-            _, w = await asyncio.wait_for(
-                asyncio.open_connection("127.0.0.1", self.port), 4)
+            _, w = await asyncio.wait_for(asyncio.open_connection(host, self.port), 4)
             return True
         except Exception:
             return False
@@ -138,15 +137,35 @@ class Server:
                 except Exception:
                     pass
 
+    async def _probe(self):
+        """Puka do wlasnego portu. True = nasluch przyjmuje polaczenia.
+
+        Probujemy kolejno petli zwrotnej i wlasnych adresow: czesc buildow
+        MicroPythona nie ma loopbacku w lwIP, ale polaczenie na wlasny adres
+        w sieci przechodzi normalnie. Adres, ktory zadzialal, zapamietujemy."""
+        net = self.lamp.net
+        order = ([self.probe_host] if self.probe_host else []) + \
+                ["127.0.0.1", net.get("ip"), net.get("ap_ip")]
+        tried = []
+        for host in order:
+            if not host or host == "-" or host in tried:
+                continue
+            tried.append(host)
+            if await self._knock(host):
+                self.probe_host = host
+                return True
+        return False
+
     async def supervisor(self, interval=120):
         """Dozor nasluchu. Najpierw sprawdza, czy sonda w ogole dziala na tym
         firmware - jesli nie (brak petli zwrotnej w lwIP), wylacza sie, zeby
         nie restartowac serwera bez powodu."""
         await asyncio.sleep(5)
         if not await self._probe():
-            logger.log("dozor serwera nieaktywny: sonda nie dziala na tym firmware")
+            logger.log("dozor serwera nieaktywny: nie moge dopukac sie na zaden "
+                       "z wlasnych adresow")
             return
-        logger.log("dozor nasluchu HTTP aktywny")
+        logger.log("dozor nasluchu HTTP aktywny (sonda przez %s)" % self.probe_host)
         bad = 0
         while True:
             await asyncio.sleep(interval)

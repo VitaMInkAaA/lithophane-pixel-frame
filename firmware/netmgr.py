@@ -241,3 +241,36 @@ async def watchdog(lamp, interval=20):
             # przy dluzszej awarii nie dobijamy sie co 20 s
             if fails > 3:
                 await asyncio.sleep(interval * 3)
+
+
+def link_info():
+    """Krotki opis stanu radia - do wpisu w logu. Rozstrzyga sytuacje, w ktorej
+    lampka "jest polaczona", a mimo to nic do niej nie dochodzi."""
+    out = []
+    try:
+        sta = network.WLAN(network.STA_IF)
+        if sta.active():
+            out.append("STA " + ("polaczone" if sta.isconnected() else "ROZLACZONE"))
+            try:
+                out.append("RSSI %d dBm" % sta.status("rssi"))
+            except (OSError, ValueError, TypeError, AttributeError):
+                pass
+            try:
+                out.append("kanal %s" % sta.config("channel"))
+            except (OSError, ValueError, TypeError, AttributeError):
+                pass
+        else:
+            out.append("STA wylaczone")
+    except Exception as e:
+        out.append("STA ? (%s)" % e)
+    try:
+        ap = network.WLAN(network.AP_IF)
+        if ap.active():
+            out.append("AP wlaczone")
+            try:
+                out.append("kanal AP %s" % ap.config("channel"))
+            except (OSError, ValueError, TypeError, AttributeError):
+                pass
+    except Exception:
+        pass
+    return ", ".join(out)
