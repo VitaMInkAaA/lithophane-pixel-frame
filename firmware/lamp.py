@@ -26,7 +26,7 @@ class Lamp:
         self.busy = False       # ktos inny rysuje na matrycy (np. pokaz IP)
         self.last_act = time.ticks_ms()
         self.net = {"mode": "?", "ip": "-", "ssid": "", "host": "",
-                    "ap_ip": None, "err": "", "trying": False}
+                    "ap_ip": None, "err": "", "trying": False, "rssi": None}
         if not self.set_anim(self.s.get("anim", "ogien"), save=False):
             self.set_anim(animations.ANIMS[0].name, save=False)
 

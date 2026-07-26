@@ -390,6 +390,20 @@ Druga możliwość przy tych samych objawach to **izolacja klientów** na router
 widzą się nawzajem. Szukaj w ustawieniach routera pozycji „izolacja klientów",
 „AP isolation" albo „blokuj komunikację między urządzeniami".
 
+**Lampka ma adres, panel działa chwilę i zamiera** → sprawdź **siłę sygnału**
+w zakładce WiFi albo w logu. Poniżej −78 dBm połączenie formalnie trwa, ale ruch
+przychodzący ginie i objawia się to dokładnie tak: panel się otwiera, po chwili
+przestaje reagować, a odświeżenie już się nie wczytuje.
+
+Najczęstsza przyczyna to **repeater albo mesh**: ta sama nazwa sieci leci z kilku
+miejsc, a lampka przyczepia się do dalekiego nadajnika. Firmware sam temu zapobiega —
+przed połączeniem skanuje eter i wybiera **konkretny, najmocniejszy** nadajnik,
+a jeśli sygnał spadnie poniżej progu na dłużej niż minutę, zrywa i szuka lepszego.
+Próg zmienisz przez `rssi_min` w `config.py`.
+
+Jeśli mimo to sygnał jest słaby, żadne oprogramowanie tego nie naprawi — przysuń
+lampkę bliżej routera albo router bliżej lampki.
+
 **Lampka jest w WiFi, ma adres, ale panel się nie otwiera** → najpewniej masz
 włączone *„Trzymaj własną sieć lampki cały czas"*. Jedno radio obsługuje wtedy dwie
 sieci naraz i połączenie się rozjeżdża. Wyłącz tę opcję (Ustawienia → Dostęp bez

@@ -462,8 +462,10 @@ class Server:
         a panel widzi postep w /api/state."""
         lamp = self.lamp
         s = config.settings
-        ip, err = await netmgr.connect(s["wifi_ssid"], s["wifi_pass"], s["hostname"])
-        lamp.net["trying"] = False
+        try:
+            ip, err = await netmgr.connect(s["wifi_ssid"], s["wifi_pass"], s["hostname"])
+        finally:
+            lamp.net["trying"] = False
         if ip:
             lamp.net["ip"] = ip
             lamp.net["ssid"] = s["wifi_ssid"]
@@ -504,6 +506,7 @@ class Server:
             "country": s["country"],
             "log_file": bool(s["log_file"]),
             "wifi_powersave": bool(s["wifi_powersave"]),
+            "rssi_min": s["rssi_min"],
             "ap_ssid": config.AP_SSID,
             "ap_pass": s["ap_pass"],
             "origin": s["origin"],

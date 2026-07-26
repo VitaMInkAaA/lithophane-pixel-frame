@@ -65,11 +65,11 @@ async def start():
             ap_ip = netmgr.start_ap(s["ap_pass"])
         lamp.net = {"mode": "sta+ap" if ap_ip else "sta", "ip": ip,
                     "ssid": s["wifi_ssid"], "host": host, "ap_ip": ap_ip,
-                    "err": "", "trying": False}
+                    "err": "", "trying": False, "rssi": netmgr.rssi_of(netmgr.network.WLAN(netmgr.network.STA_IF))}
     else:
         ap_ip = netmgr.start_ap(s["ap_pass"])
         lamp.net = {"mode": "ap", "ip": ap_ip or "-", "ssid": config.AP_SSID,
-                    "host": host, "ap_ip": ap_ip, "err": err, "trying": False}
+                    "host": host, "ap_ip": ap_ip, "err": err, "trying": False, "rssi": None}
         glyphs.flash(lamp.m, (0, 0, 90), 2)       # niebieski x2: tryb AP
 
     logger.log("start; siec:", lamp.net["mode"], "adres:", lamp.net["ip"])

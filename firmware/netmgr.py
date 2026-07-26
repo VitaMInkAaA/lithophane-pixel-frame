@@ -83,7 +83,41 @@ def set_country(code):
         return False
 
 
-async def connect(ssid, password, hostname=None, timeout_ms=15000, tries=3):
+def best_ap(ssid):
+    """Znajduje NAJMOCNIEJSZY nadajnik o tej nazwie.
+
+    W sieci z repeaterem albo mesh ta sama nazwa leci z kilku miejsc. Sterownik
+    potrafi przyczepic sie do dalekiego i wtedy lampka jest "polaczona", ale
+    ruch przychodzacy ginie. Skanujemy sami i wybieramy konkretny nadajnik.
+    Zwraca (bssid, rssi, kanal) albo None."""
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    best = None
+    try:
+        for net in wlan.scan():
+            name = net[0]
+            if isinstance(name, bytes):
+                try:
+                    name = name.decode()
+                except UnicodeError:
+                    continue
+            if name != ssid:
+                continue
+            if best is None or net[3] > best[1]:
+                best = (net[1], net[3], net[2])
+    except (OSError, IndexError, TypeError) as e:
+        log("skan przed polaczeniem nieudany:", e)
+    return best
+
+
+def rssi_of(wlan):
+    try:
+        return wlan.status("rssi")
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None
+
+
+async def connect(ssid, password, hostname=None, timeout_ms=15000, tries=3, pick_best=True):
     """Laczy sie z siecia. Zwraca (adres_ip, None) albo (None, opis_bledu).
 
     Asynchroniczne, zeby proba polaczenia uruchomiona z panelu nie zamrazala
@@ -99,12 +133,24 @@ async def connect(ssid, password, hostname=None, timeout_ms=15000, tries=3):
         except (AttributeError, OSError, ValueError):
             pass
 
+    target = best_ap(ssid) if pick_best else None
+    if target:
+        log("wybieram nadajnik: RSSI %d dBm, kanal %s" % (target[1], target[2]))
+
     status = 0
     for attempt in range(tries):
         if attempt:
             print("proba %d/%d..." % (attempt + 1, tries))
         try:
-            wlan.connect(ssid, password)
+            if target:
+                try:
+                    wlan.connect(ssid, password, bssid=target[0])
+                except TypeError:
+                    # starsze buildy nie przyjmuja bssid - trudno, lecimy bez
+                    target = None
+                    wlan.connect(ssid, password)
+            else:
+                wlan.connect(ssid, password)
         except OSError as e:
             status = 0
             print("connect():", e)
@@ -115,7 +161,7 @@ async def connect(ssid, password, hostname=None, timeout_ms=15000, tries=3):
         bad = 0
         while time.ticks_diff(time.ticks_ms(), t0) < timeout_ms:
             if wlan.isconnected():
-                return wlan.ifconfig()[0], None
+                return _connected(wlan)
             status = wlan.status()
             if status < 0:
                 # Pojedynczy ujemny odczyt zdarza sie w trakcie kojarzenia i
@@ -128,13 +174,27 @@ async def connect(ssid, password, hostname=None, timeout_ms=15000, tries=3):
             await asyncio.sleep_ms(300)
 
         if wlan.isconnected():
-            return wlan.ifconfig()[0], None
+            return _connected(wlan)
         if status == -3:
             break            # zle haslo - kolejne proby nic nie dadza
         await asyncio.sleep_ms(600)
 
     wlan.active(False)
     return None, STATUS_MSG.get(status, "nie udało się połączyć (kod %s)" % status)
+
+
+def _connected(wlan):
+    """Wspolne zakonczenie udanego polaczenia - z oceną sily sygnalu."""
+    ip = wlan.ifconfig()[0]
+    r = rssi_of(wlan)
+    if r is None:
+        log("polaczone, adres", ip)
+    else:
+        log("polaczone, adres %s, RSSI %d dBm" % (ip, r))
+        if r < config.settings.get("rssi_min", -78):
+            log("UWAGA: sygnal slaby (%d dBm). Lampka bedzie miala adres, ale "
+                "panel moze byc nieosiagalny - przysun ja blizej routera." % r)
+    return ip, None
 
 
 def start_ap(password):
@@ -206,6 +266,7 @@ async def watchdog(lamp, interval=20):
     ponownie. To druga typowa przyczyna "rano nie dzialalo"."""
     wlan = network.WLAN(network.STA_IF)
     fails = 0
+    weak = 0
     while True:
         await asyncio.sleep(interval)
         ssid = config.settings.get("wifi_ssid")
@@ -221,14 +282,50 @@ async def watchdog(lamp, interval=20):
                 log("router zmienil nam adres na", ip)
                 lamp.net["ip"] = ip
                 lamp.net["err"] = ""
+
+            # Sygnal moze byc fatalny mimo utrzymanego polaczenia - wtedy lampka
+            # ma adres, a i tak nic do niej nie dochodzi. Po minucie takiego
+            # stanu zrywamy i szukamy mocniejszego nadajnika.
+            r = rssi_of(wlan)
+            lamp.net["rssi"] = r
+            if r is not None and r < config.settings.get("rssi_min", -78):
+                weak += 1
+                if weak >= 3:
+                    weak = 0
+                    log("sygnal slaby od minuty (%d dBm) - szukam mocniejszego "
+                        "nadajnika" % r)
+                    lamp.net["trying"] = True
+                    try:
+                        try:
+                            wlan.disconnect()
+                        except (OSError, AttributeError):
+                            pass
+                        await asyncio.sleep(1)
+                        ip2, err2 = await connect(
+                            ssid, config.settings.get("wifi_pass", ""),
+                            config.settings.get("hostname"), tries=1)
+                        if ip2:
+                            lamp.net["ip"] = ip2
+                            lamp.net["rssi"] = rssi_of(wlan)
+                            lamp.net["err"] = ""
+                        else:
+                            lamp.net["err"] = err2 or "brak polaczenia"
+                    finally:
+                        # flaga MUSI zejsc nawet gdy proba zostanie przerwana -
+                        # inaczej watchdog omijalby sie w nieskonczonosc
+                        lamp.net["trying"] = False
+            else:
+                weak = 0
             continue
 
         fails += 1
         log("WiFi zerwane (%d. raz), wznawiam" % fails)
         lamp.net["trying"] = True
-        ip, err = await connect(ssid, config.settings.get("wifi_pass", ""),
-                                config.settings.get("hostname"), tries=1)
-        lamp.net["trying"] = False
+        try:
+            ip, err = await connect(ssid, config.settings.get("wifi_pass", ""),
+                                    config.settings.get("hostname"), tries=1)
+        finally:
+            lamp.net["trying"] = False
         if ip:
             lamp.net["ip"] = ip
             lamp.net["ssid"] = ssid

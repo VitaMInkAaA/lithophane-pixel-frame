@@ -116,8 +116,13 @@ function apply(st) {
   $('#captive').checked = st.captive;
   $('#apName').textContent = st.ap_ssid;
 
+  const r = st.net.rssi;
+  const sig = r == null ? '' :
+    ' Sygnał <b>' + r + ' dBm</b> — ' +
+    (r >= -60 ? 'dobry' : r >= -70 ? 'wystarczający'
+     : r >= -78 ? 'słaby' : 'za słaby, panel może być nieosiągalny') + '.';
   $('#wifiState').innerHTML = sta
-    ? 'Połączona z <b>' + esc(st.net.ssid) + '</b>.'
+    ? 'Połączona z <b>' + esc(st.net.ssid) + '</b>.' + sig
     : 'Tryb Access Point — lampka nie jest w żadnej sieci. '
       + 'Wpisz dane swojej sieci, żeby dołączyła do domowego WiFi.';
   const errBox = $('#wifiErr');

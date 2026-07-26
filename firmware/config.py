@@ -40,6 +40,9 @@ DEFAULTS = {
     # Oszczedzanie energii radia usypia odbiornik i gubi pakiety przychodzace -
     # po godzinach pracy lampka "jest w sieci", ale panel nie odpowiada.
     "wifi_powersave": False,
+    # Ponizej tej sily sygnalu polaczenie formalnie trwa, ale ruch przychodzacy
+    # ginie. Lampka probuje wtedy przepiac sie na mocniejszy nadajnik.
+    "rssi_min": -78,
     "log_file": True,        # zapisuj zdarzenia do log.txt
     "btn_active_high": True, # TTP223 domyslnie daje stan wysoki przy dotyku
     # Geometria tasmy w ramce: pierwsza dioda w prawym DOLNYM rogu, pasek idzie
