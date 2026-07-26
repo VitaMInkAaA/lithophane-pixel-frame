@@ -8,12 +8,24 @@ wszystko lokalnie na Pico.
 
 | Sygnał | Pico | Uwagi |
 |---|---|---|
-| DIN matrycy | **GP0** (pin 1) | rezystor 330 Ω w szereg przy pierwszej diodzie |
+| DIN matrycy | **GP0** (pin 1) | opcjonalnie rezystor 330 Ω w szereg przy pierwszej diodzie |
 | OUT z TTP223 | **GP2** (pin 4) | |
 | VCC TTP223 | **3V3(OUT)** (pin 36) | **nie 5 V** — GPIO Pico nie jest 5 V tolerant |
 | GND wszystkiego | GND (pin 38) | masa wspólna z zasilaczem |
-| zasilanie Pico | **VSYS** (pin 39) przez diodę Schottky | dioda pozwala trzymać USB podłączone |
-| zasilanie matrycy | osobna para przewodów wprost od zasilacza | + kondensator 470–1000 µF |
+| zasilanie Pico | **VSYS** (pin 39) | opcjonalnie przez diodę Schottky |
+| zasilanie matrycy | osobna para przewodów wprost od zasilacza | |
+
+### Elementy opcjonalne
+
+Referencyjny egzemplarz działa bez nich. To dobra praktyka, warta dołożenia,
+jeśli natkniesz się na odpowiadający jej problem:
+
+| Element | Po co |
+|---|---|
+| **dioda Schottky** 1N5817 / SS14, ≥ 1 A | na `VSYS`, żeby dało się mieć podłączony zasilacz i USB jednocześnie |
+| **rezystor 330 Ω** | w szereg z linią danych przy pierwszej diodzie — tłumi odbicia przy dłuższym przewodzie |
+| **kondensator 470–1000 µF**, ≥ 6,3 V | między 5 V i GND na wejściu matrycy — przyjmuje skoki prądu przy przełączaniu wielu diod naraz |
+| **konwerter poziomów 74AHCT125** | tylko jeśli diody wariują przy danych 3,3 V |
 
 Taśma naklejona wężykiem: **pierwsza dioda w prawym dolnym rogu** (patrząc na ramkę
 z przodu), pasek idzie **w górę**, zawraca i schodzi w dół — czyli kolumnami po 9.

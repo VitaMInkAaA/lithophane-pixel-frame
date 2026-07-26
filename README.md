@@ -49,15 +49,21 @@ on the lamp in real time.
 | 2 | **WS2812B LED strip** | 63 LEDs | Cut into segments and glued in a serpentine. 60 LEDs/m gives ~16.7 mm pitch → ~117 × 150 mm active area. |
 | 3 | **TTP223 capacitive touch module** | 1 | Momentary mode (factory default). Latching mode will **not** work. |
 | 4 | **5 V power supply** | 1 | ≥ 3 A for full brightness, 2 A is enough at the default 40 %. |
-| 5 | **Schottky diode** | 1 | 1N5817 / SS14 / MBR120, ≥ 1 A. Lets you keep USB plugged in. |
-| 6 | **Resistor 330 Ω** | 1 | In series with the data line, at the first LED. |
-| 7 | **Capacitor 470–1000 µF** | 1 | ≥ 6.3 V, across 5 V and GND at the matrix input. |
-| 8 | **Wire** | — | AWG 20 (0.5 mm²) for power, AWG 24–26 for data. |
-| 9 | **3D-printed enclosure** | 3 parts | STL files in [`cad/`](cad/) — main case, back cover, Pico cover. |
-| 10 | **Lithophane panel** | 1 | Printed from your own photo, see below. |
+| 5 | **Wire** | — | AWG 20 (0.5 mm²) for power, AWG 24–26 for data. |
+| 6 | **3D-printed enclosure** | 3 parts | STL files in [`cad/`](cad/) — main case, back cover, Pico cover. |
+| 7 | **Lithophane panel** | 1 | Printed from your own photo, see below. |
 
-Optional: a **74AHCT125** level shifter if the LEDs misbehave on 3.3 V data
-(see [Troubleshooting](#troubleshooting)).
+### Optional
+
+The reference build runs fine without these. They are common good practice and worth
+adding if you hit the matching problem:
+
+| Part | What it is for |
+|---|---|
+| **Schottky diode** 1N5817 / SS14, ≥ 1 A | On `VSYS`, so the external supply and USB can both be connected at once |
+| **Resistor 330 Ω** | In series with the data line at the first LED — damps reflections on long data runs |
+| **Capacitor 470–1000 µF**, ≥ 6.3 V | Across 5 V and GND at the matrix input — absorbs current surges when many LEDs switch at once |
+| **74AHCT125** level shifter | Only if the LEDs misbehave on 3.3 V data (see [Troubleshooting](#troubleshooting)) |
 
 ---
 
@@ -132,21 +138,22 @@ Notes:
 
 | Signal | Pico W pin | Notes |
 |---|---|---|
-| Matrix `DIN` | **GP0** — pin 1 | Through the 330 Ω resistor |
+| Matrix `DIN` | **GP0** — pin 1 | Optionally through a 330 Ω resistor |
 | TTP223 `OUT` | **GP2** — pin 4 | |
 | TTP223 `VCC` | **3V3(OUT)** — pin 36 | **Not 5 V** — Pico GPIO is not 5 V tolerant |
 | Common ground | **GND** — pin 38 | Supply, Pico and matrix must share ground |
-| Pico power | **VSYS** — pin 39 | Via the Schottky diode |
+| Pico power | **VSYS** — pin 39 | Optionally via a Schottky diode |
 | Matrix power | Straight from the PSU | Separate pair of wires |
 
 ```
                     ┌──────────── (thick pair) ──────► matrix  5V / GND
    5 V PSU ─────────┤
-                    └── ►|── VSYS (pin 39)     ┌── 470–1000 µF across 5V/GND
-                      Schottky                 │   at the matrix input
-                                               │
-   Pico GP0 ──[ 330 Ω ]──────────────────────► DIN (first LED)
-   Pico GND ─────────────────────────────────► GND  (shared!)
+                    └───────────────────────────────► VSYS (pin 39)
+                        (optional Schottky here, so USB
+                         can stay plugged in at the same time)
+
+   Pico GP0 ──────────────────────────────────► DIN (first LED)
+   Pico GND ──────────────────────────────────► GND  (shared!)
 ```
 
 ### Power notes
@@ -154,8 +161,9 @@ Notes:
 - **Never feed 5 V into `VBUS` (pin 40)** — it is wired directly to the USB
   connector and would back-feed your computer's port.
 - **Never feed 5 V into `3V3(OUT)` (pin 36)** — that pin is an output and 5 V kills it.
-- With the Schottky diode on `VSYS` you can keep USB connected while the external
-  supply is on — the two sources can't fight each other.
+- Feeding `VSYS` directly works. Add a Schottky diode there if you want the external
+  supply and USB connected at the same time — then the two sources can't fight
+  each other.
 - Wire the power in a **star** from the PSU. Don't daisy-chain the Pico behind the
   matrix: several amps of pulsing current through a thin wire cause voltage dips
   that reset the Pico mid-animation.
