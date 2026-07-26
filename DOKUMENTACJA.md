@@ -398,11 +398,23 @@ przestaje reagować, a odświeżenie już się nie wczytuje.
 Najczęstsza przyczyna to **repeater albo mesh**: ta sama nazwa sieci leci z kilku
 miejsc, a lampka przyczepia się do dalekiego nadajnika. Firmware sam temu zapobiega —
 przed połączeniem skanuje eter i wybiera **konkretny, najmocniejszy** nadajnik,
-a jeśli sygnał spadnie poniżej progu na dłużej niż minutę, zrywa i szuka lepszego.
-Próg zmienisz przez `rssi_min` w `config.py`.
+zamiast zdawać się na sterownik.
 
-Jeśli mimo to sygnał jest słaby, żadne oprogramowanie tego nie naprawi — przysuń
-lampkę bliżej routera albo router bliżej lampki.
+Gdy sygnał spadnie poniżej progu (`rssi_min`, domyślnie −78 dBm) i utrzyma się tak
+przez minutę, lampka **najpierw skanuje** i przepina się tylko wtedy, gdy naprawdę
+jest do czego: kandydat musi być mocniejszy o co najmniej 6 dB. W miejscu z jednym
+nadajnikiem nic nie robi — zrywanie działającego, choć słabego łącza co minutę tylko
+pogorszyłoby sprawę. Zapisuje wtedy do logu:
+
+```
+sygnal slaby (-85 dBm), ale najmocniejszy dostepny nadajnik ma -85 dBm
+- nie ma sensu sie przepinac, zostaje
+```
+
+i przez 10 minut nie ponawia sprawdzania, bo samo skanowanie na chwilę przerywa ruch.
+
+Jeśli w danym miejscu sygnał jest po prostu słaby, żadne oprogramowanie tego nie
+naprawi — przysuń lampkę bliżej routera albo dostaw repeater.
 
 **Lampka jest w WiFi, ma adres, ale panel się nie otwiera** → najpewniej masz
 włączone *„Trzymaj własną sieć lampki cały czas"*. Jedno radio obsługuje wtedy dwie

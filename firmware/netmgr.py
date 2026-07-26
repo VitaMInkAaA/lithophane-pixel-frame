@@ -258,6 +258,11 @@ def scan():
     return out
 
 
+WEAK_CHECKS = 3            # ile kolejnych slabych odczytow zanim zareagujemy
+BETTER_BY_DB = 6           # o tyle dB kandydat musi byc lepszy, zeby warto bylo
+ROAM_COOLDOWN_MS = 600000  # 10 min przerwy - skanowanie tez przerywa ruch
+
+
 async def watchdog(lamp, interval=20):
     """Pilnuje polaczenia i wznawia je po zerwaniu.
 
@@ -267,6 +272,7 @@ async def watchdog(lamp, interval=20):
     wlan = network.WLAN(network.STA_IF)
     fails = 0
     weak = 0
+    last_roam = None
     while True:
         await asyncio.sleep(interval)
         ssid = config.settings.get("wifi_ssid")
@@ -284,16 +290,37 @@ async def watchdog(lamp, interval=20):
                 lamp.net["err"] = ""
 
             # Sygnal moze byc fatalny mimo utrzymanego polaczenia - wtedy lampka
-            # ma adres, a i tak nic do niej nie dochodzi. Po minucie takiego
-            # stanu zrywamy i szukamy mocniejszego nadajnika.
+            # ma adres, a i tak nic do niej nie dochodzi.
             r = rssi_of(wlan)
             lamp.net["rssi"] = r
             if r is not None and r < config.settings.get("rssi_min", -78):
                 weak += 1
-                if weak >= 3:
-                    weak = 0
-                    log("sygnal slaby od minuty (%d dBm) - szukam mocniejszego "
-                        "nadajnika" % r)
+                if weak < WEAK_CHECKS:
+                    continue
+                weak = 0
+
+                # Nie zrywamy polaczenia w ciemno. Najpierw sprawdzamy, czy w
+                # ogole jest do czego sie przepiac - w miejscu z JEDNYM
+                # nadajnikiem zrywanie co minute tylko pogorszyloby sprawe.
+                if last_roam is not None and \
+                        time.ticks_diff(time.ticks_ms(), last_roam) < ROAM_COOLDOWN_MS:
+                    continue
+                last_roam = time.ticks_ms()
+
+                cand = best_ap(ssid)
+                if cand is None:
+                    log("sygnal slaby (%d dBm), skan nic nie znalazl - zostaje "
+                        "na tym polaczeniu" % r)
+                    continue
+                if cand[1] < r + BETTER_BY_DB:
+                    log("sygnal slaby (%d dBm), ale najmocniejszy dostepny nadajnik "
+                        "ma %d dBm - nie ma sensu sie przepinac, zostaje"
+                        % (r, cand[1]))
+                    continue
+
+                log("sygnal slaby (%d dBm), jest mocniejszy nadajnik (%d dBm, "
+                    "kanal %s) - przepinam sie" % (r, cand[1], cand[2]))
+                if True:
                     lamp.net["trying"] = True
                     try:
                         try:
